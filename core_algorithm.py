@@ -1,14 +1,37 @@
 import random
+from individual import Individual
+import numpy as np
 
-city_dist_mat = None
+
 # 城市数量(基因序列长度)
-gene_len = 20
+city_num = 20
 # 个体数量
 individual_num = 60
 # 迭代轮数
 gen_num = 400
 # 变异概率
 mutate_prob = 0.25
+# 城市维度
+pos_dimension = 2
+
+
+def build_dist_mat(input_list):
+    # 城市数量20
+    global city_num
+    dist_mat = np.zeros([city_num, city_num])
+    for i in range(city_num):
+        for j in range(i + 1, city_num):
+            d = input_list[i, :] - input_list[j, :]
+            # 计算点积
+            dist_mat[i, j] = np.dot(d, d)
+            dist_mat[j, i] = dist_mat[i, j]
+    return dist_mat
+
+
+# 城市坐标矩阵
+city_pos_list = np.random.rand(city_num, pos_dimension)
+# 城市距离矩阵
+city_dist_mat = build_dist_mat(city_pos_list)
 
 
 def copy_list(old_arr: [int]):
@@ -18,31 +41,15 @@ def copy_list(old_arr: [int]):
     return new_arr
 
 
-# 个体类
-class Individual:
-    def __init__(self, genes=None):
-        # 随机生成序列
-        if genes is None:
-            genes = [i for i in range(gene_len)]
-            random.shuffle(genes)
-        self.genes = genes
-        self.fitness = self.evaluate_fitness()
-
-    # 适应度函数：走完所有城市的开销求和
-    def evaluate_fitness(self):
-        # 计算个体适应度
-        fitness = 0.0
-        for i in range(gene_len - 1):
-            # 起始城市和目标城市
-            from_idx = self.genes[i]
-            to_idx = self.genes[i + 1]
-            fitness += city_dist_mat[from_idx, to_idx]
-        # 连接首尾
-        fitness += city_dist_mat[self.genes[-1], self.genes[0]]
-        return fitness
+def rank(group):
+    for i in range(1, len(group)):
+        for j in range(0, len(group) - i):
+            if group[j].fitness > group[j + 1].fitness:
+                group[j], group[j + 1] = group[j + 1], group[j]
+    return group
 
 
-class Ga:
+class Solution:
     def __init__(self, input_):
         global city_dist_mat
         city_dist_mat = input_
@@ -59,8 +66,8 @@ class Ga:
             genes1 = copy_list(self.individual_list[i].genes)
             genes2 = copy_list(self.individual_list[i + 1].genes)
             # 随机交换指定两个位置之间的基因序列
-            index1 = random.randint(0, gene_len - 2)
-            index2 = random.randint(index1, gene_len - 1)
+            index1 = random.randint(0, city_num - 2)
+            index2 = random.randint(index1, city_num - 1)
             pos1_recorder = {value: idx for idx, value in enumerate(genes1)}
             pos2_recorder = {value: idx for idx, value in enumerate(genes2)}
             # 交叉
@@ -72,8 +79,8 @@ class Ga:
                 genes2[j], genes2[pos2] = genes2[pos2], genes2[j]
                 pos1_recorder[value1], pos1_recorder[value2] = pos1, j
                 pos2_recorder[value1], pos2_recorder[value2] = j, pos2
-            new_gen.append(Individual(genes1))
-            new_gen.append(Individual(genes2))
+            new_gen.append(Individual(genes=genes1, city_num=city_num, city_dist_mat=city_dist_mat))
+            new_gen.append(Individual(genes=genes2, city_num=city_num, city_dist_mat=city_dist_mat))
         return new_gen
 
     # 变异策略：
@@ -82,8 +89,8 @@ class Ga:
             if random.random() < mutate_prob:
                 # 翻转切片
                 old_genes = copy_list(individual.genes)
-                index1 = random.randint(0, gene_len - 2)
-                index2 = random.randint(index1, gene_len - 1)
+                index1 = random.randint(0, city_num - 2)
+                index2 = random.randint(index1, city_num - 1)
                 genes_mutate = old_genes[index1:index2]
                 genes_mutate.reverse()
                 individual.genes = old_genes[:index1] + genes_mutate + old_genes[index2:]
@@ -101,21 +108,12 @@ class Ga:
             for j in range(group_size):
                 # 随机组成小组
                 player = random.choice(self.individual_list)
-                player = Individual(player.genes)
+                player = Individual(genes=player.genes, city_num=city_num, city_dist_mat=city_dist_mat)
                 group.append(player)
-            group = Ga.rank(group)
+            group = rank(group)
             # 取出获胜者
             winners += group[:group_winner]
         self.individual_list = winners
-
-    @staticmethod
-    def rank(group):
-        # 冒泡排序
-        for i in range(1, len(group)):
-            for j in range(0, len(group) - i):
-                if group[j].fitness > group[j + 1].fitness:
-                    group[j], group[j + 1] = group[j + 1], group[j]
-        return group
 
     def next_gen(self):
         # 交叉
@@ -131,7 +129,7 @@ class Ga:
 
     def train(self):
         # 初代种群
-        self.individual_list = [Individual() for _ in range(individual_num)]
+        self.individual_list = [Individual(city_num=city_num, city_dist_mat=city_dist_mat) for _ in range(individual_num)]
         self.best = self.individual_list[0]
         # 迭代
         for i in range(gen_num):
