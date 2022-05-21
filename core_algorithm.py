@@ -58,12 +58,14 @@ class Ga:
             # 父代基因
             genes1 = copy_list(self.individual_list[i].genes)
             genes2 = copy_list(self.individual_list[i + 1].genes)
+            # 随机交换指定两个位置之间的基因序列
             index1 = random.randint(0, gene_len - 2)
             index2 = random.randint(index1, gene_len - 1)
             pos1_recorder = {value: idx for idx, value in enumerate(genes1)}
             pos2_recorder = {value: idx for idx, value in enumerate(genes2)}
             # 交叉
             for j in range(index1, index2):
+                # 拿到对应位置的index和value
                 value1, value2 = genes1[j], genes2[j]
                 pos1, pos2 = pos1_recorder[value2], pos2_recorder[value1]
                 genes1[j], genes1[pos1] = genes1[pos1], genes1[j]
@@ -74,6 +76,7 @@ class Ga:
             new_gen.append(Individual(genes2))
         return new_gen
 
+    # 变异策略：
     def mutate(self, new_gen):
         for individual in new_gen:
             if random.random() < mutate_prob:

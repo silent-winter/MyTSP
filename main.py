@@ -1,5 +1,5 @@
 import numpy as np
-from ga import Ga
+from core_algorithm import Ga
 import matplotlib.pyplot as plt
 
 # 城市数量
