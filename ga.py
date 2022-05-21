@@ -1,14 +1,14 @@
-import config as conf
 import random
 
 city_dist_mat = None
-config = conf.get_config()
-conf.print_config()
-# 各项参数
-gene_len = config.city_num
-individual_num = config.individual_num
-gen_num = config.gen_num
-mutate_prob = config.mutate_prob
+# 城市数量(基因序列长度)
+gene_len = 20
+# 个体数量
+individual_num = 60
+# 迭代轮数
+gen_num = 400
+# 变异概率
+mutate_prob = 0.25
 
 
 def copy_list(old_arr: [int]):
@@ -28,6 +28,7 @@ class Individual:
         self.genes = genes
         self.fitness = self.evaluate_fitness()
 
+    # 适应度函数：走完所有城市的开销求和
     def evaluate_fitness(self):
         # 计算个体适应度
         fitness = 0.0

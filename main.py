@@ -1,16 +1,19 @@
 import numpy as np
-import config as conf
 from ga import Ga
 import matplotlib.pyplot as plt
 
-config = conf.get_config()
+# 城市数量
+city_num = 20
+# 城市维度
+pos_dimension = 2
 
 
 def build_dist_mat(input_list):
-    n = config.city_num
-    dist_mat = np.zeros([n, n])
-    for i in range(n):
-        for j in range(i + 1, n):
+    # 城市数量20
+    global city_num
+    dist_mat = np.zeros([city_num, city_num])
+    for i in range(city_num):
+        for j in range(i + 1, city_num):
             d = input_list[i, :] - input_list[j, :]
             # 计算点积
             dist_mat[i, j] = np.dot(d, d)
@@ -19,11 +22,10 @@ def build_dist_mat(input_list):
 
 
 # 城市坐标
-city_pos_list = np.random.rand(config.city_num, config.pos_dimension)
+city_pos_list = np.random.rand(city_num, pos_dimension)
 # 城市距离矩阵
 city_dist_mat = build_dist_mat(city_pos_list)
 
-print(city_pos_list)
 print(city_dist_mat)
 
 # 遗传算法运行
